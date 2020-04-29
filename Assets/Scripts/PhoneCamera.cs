@@ -1,7 +1,9 @@
-﻿using System.Collections;
+﻿using System;
+using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.UI;
+using System.Runtime.InteropServices;
 
 public class PhoneCamera : MonoBehaviour
 {
@@ -9,15 +11,24 @@ public class PhoneCamera : MonoBehaviour
     private WebCamTexture backCamTexture;
     private Texture defaultBackground;
 
+    public string deviceName;
+    public string deviceWidth;
+    public string deviceHeight;
+    public float ratio;
+
+    public RectTransform parentRect;
     public RawImage background;
-    public AspectRatioFitter fit;
+    //public AspectRatioFitter fit;
+
+    private Color32[] textureBasePixels;
+    private Color32[] textureNewPixels;
 
     private void Start()
     {
         defaultBackground = background.texture;
         WebCamDevice[] devices = WebCamTexture.devices;
 
-        if(devices.Length == 0)
+        if (devices.Length == 0)
         {
             Debug.Log("No camera detected!");
             camAvailable = false;
@@ -41,6 +52,14 @@ public class PhoneCamera : MonoBehaviour
         backCamTexture.Play();
         background.texture = backCamTexture;
 
+        deviceName = backCamTexture.deviceName;
+        deviceWidth = backCamTexture.width.ToString();
+        deviceHeight = backCamTexture.height.ToString();
+
+        //optional
+        textureBasePixels = new Color32[backCamTexture.width * backCamTexture.height];
+        textureNewPixels = new Color32[backCamTexture.width * backCamTexture.height];
+
         camAvailable = true;
     }
 
@@ -49,14 +68,75 @@ public class PhoneCamera : MonoBehaviour
         if (!camAvailable)
             return;
 
-        float ratio = (float)backCamTexture.width / (float)backCamTexture.height;
-        fit.aspectRatio = ratio;
+        TextureRemapping();
 
-        float scaleY = backCamTexture.videoVerticallyMirrored ? -1f : 1f;
-        background.rectTransform.localScale = new Vector3(1f, scaleY, 1f);
+        //optional
+        //RedFilter();
+    }
+
+    void RedFilter()
+    {
+        backCamTexture.GetPixels32(textureBasePixels);
+        //webcam feed processing
+        for (int i = 0; i < textureNewPixels.Length; i++)
+        {
+            textureNewPixels[i].r = 255;//(byte)((int)textureBasePixels[i].r + 30);
+        }
+        Texture2D newTexture = new Texture2D(backCamTexture.width, backCamTexture.height);
+        newTexture.SetPixels32(textureNewPixels);
+        
+        background.texture = newTexture;
+    }
+
+    void TextureRemapping()
+    {
+        ratio = (float)backCamTexture.width / (float)backCamTexture.height;
+        //fit.aspectRatio = ratio;
+
+        //float scaleY = backCamTexture.videoVerticallyMirrored ? -1f : 1f;//not needed for android
+        background.rectTransform.localScale = new Vector3(1.777f * ((float)backCamTexture.width / 1920f), 0.563f/*scaleY*/, 1f);
 
         int orientation = -backCamTexture.videoRotationAngle;
         background.rectTransform.localEulerAngles = new Vector3(0, 0, orientation);
+    }
+
+    /// <summary>
+    /// newly added part
+    /// </summary>
+
+    //frame texture (screenshot from camera)
+    static byte[] ScreenshotWebcam(WebCamTexture wct) 
+    { 
+        Texture2D colorTex = new Texture2D(wct.width, wct.height, TextureFormat.RGBA32, false); 
+        colorTex.LoadRawTextureData(Color32ArrayToByteArray(wct.GetPixels32())); 
+        colorTex.Apply(); 
+        return colorTex.EncodeToPNG(); 
+    }
+
+    //Color32Array to ByteArray
+    private static byte[] Color32ArrayToByteArray(Color32[] colors)
+    {
+        if (colors == null || colors.Length == 0)
+            return null;
+
+        int lengthOfColor32 = Marshal.SizeOf(typeof(Color32));
+        int length = lengthOfColor32 * colors.Length;
+        byte[] bytes = new byte[length];
+
+        GCHandle handle = default(GCHandle);
+        try
+        {
+            handle = GCHandle.Alloc(colors, GCHandleType.Pinned);
+            IntPtr ptr = handle.AddrOfPinnedObject();
+            Marshal.Copy(ptr, bytes, 0, length);
+        }
+        finally
+        {
+            if (handle != default(GCHandle))
+                handle.Free();
+        }
+
+        return bytes;
     }
 }
 

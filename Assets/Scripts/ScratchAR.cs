@@ -13,7 +13,7 @@ public class ScratchAR : MonoBehaviour
     //Camera
     private WebCamTexture cam;
     public RawImage background;
-    public AspectRatioFitter fit;
+    //public AspectRatioFitter fit;
 
     private bool ARready = false;
 
@@ -68,17 +68,23 @@ public class ScratchAR : MonoBehaviour
         if(ARready)
         {
             //Update Camera
-            float ratio = (float)cam.width / (float)cam.height;
-            fit.aspectRatio = ratio;
-
-            float scaleY = cam.videoVerticallyMirrored ? -1.0f : 1.0f;
-            background.rectTransform.localScale = new Vector3(1f, scaleY, 1f);
-
-            int orientation = -cam.videoRotationAngle;
-            background.rectTransform.localEulerAngles = new Vector3(0, 0, orientation);
+            TextureRemapping();
 
             //Update Gyro
             transform.localRotation = gyro.attitude * rotation;
         }
     }
+
+    void TextureRemapping()
+    {
+        float ratio = (float)cam.width / (float)cam.height;
+        //fit.aspectRatio = ratio;
+
+        //float scaleY = cam.videoVerticallyMirrored ? -1.0f : 1.0f;//not needed for android
+        background.rectTransform.localScale = new Vector3(1.777f * ((float)cam.width/1920), 0.563f, 1f);
+
+        int orientation = -cam.videoRotationAngle;
+        background.rectTransform.localEulerAngles = new Vector3(0, 0, orientation);
+    }
+
 }
