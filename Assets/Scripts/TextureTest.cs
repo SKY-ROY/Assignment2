@@ -52,30 +52,31 @@ public class TextureTest : MonoBehaviour
 
         if(true)
         {
-            FilterMethod(texture2);
+            FilterMethod(texture2, texture1);
         }
 
         // upload to the GPU
         texture1.Apply();
     }
 
-    void FilterMethod(Texture2D tex)
+    void FilterMethod(Texture2D tex1, Texture2D tex2)
     {
-        byte[] pngByteArray = ScreenshotWebcam(tex);
+        byte[] pngByteArray = ScreenshotWebcam(tex2);
 
         //send to plugin
         var plugin = new AndroidJavaClass("com.sky5698.unityplugin.PlugInClass");
-        pngByteArray = plugin.CallStatic<Byte[]>("ImageProcessingMethod", pngByteArray);
+        pngByteArray = plugin.CallStatic<Byte[]>("GetTextureDataFromPlugin");
+        //pngByteArray = plugin.CallStatic<Byte[]>("ImageProcessingMethod", pngByteArray, tex1.height, tex1.width);
 
-        tex.LoadImage(pngByteArray);
-        tex.Apply();
+        tex1.LoadImage(pngByteArray);
+        tex1.Apply();
     }
 
     static byte[] ScreenshotWebcam(Texture2D wct/*WebCamTexture wct*/)
     {
         Texture2D colorTex = new Texture2D(wct.width, wct.height, TextureFormat.RGBA32, false);
         colorTex.LoadRawTextureData(Color32ArrayToByteArray(wct.GetPixels32()));
-        //colorTex.Apply();
+        colorTex.Apply();
         return colorTex.EncodeToPNG();
     }
 

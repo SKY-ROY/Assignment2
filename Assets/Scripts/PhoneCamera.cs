@@ -9,6 +9,7 @@ public class PhoneCamera : MonoBehaviour
 {
     private bool camAvailable;
     private WebCamTexture backCamTexture;
+    private Texture2D outputTexture;
     private Texture defaultBackground;
 
     public string deviceName;
@@ -18,10 +19,6 @@ public class PhoneCamera : MonoBehaviour
 
     public RectTransform parentRect;
     public RawImage background;
-    //public AspectRatioFitter fit;
-
-    private Color32[] textureBasePixels;
-    private Color32[] textureNewPixels;
 
     private void Start()
     {
@@ -40,6 +37,9 @@ public class PhoneCamera : MonoBehaviour
             if(!devices[i].isFrontFacing)
             {
                 backCamTexture = new WebCamTexture(devices[i].name, Screen.width, Screen.height);
+                //flag
+                if(true)
+                    outputTexture = new Texture2D(backCamTexture.width, backCamTexture.height, TextureFormat.RGBA32, false);
             }
         }
 
@@ -50,15 +50,15 @@ public class PhoneCamera : MonoBehaviour
         }
 
         backCamTexture.Play();
-        background.texture = backCamTexture;
+        //flag
+        if (true)
+            background.texture = outputTexture;
+        else
+            background.texture = backCamTexture;
 
         deviceName = backCamTexture.deviceName;
         deviceWidth = backCamTexture.width.ToString();
         deviceHeight = backCamTexture.height.ToString();
-
-        //optional
-        textureBasePixels = new Color32[backCamTexture.width * backCamTexture.height];
-        textureNewPixels = new Color32[backCamTexture.width * backCamTexture.height];
 
         camAvailable = true;
     }
@@ -67,28 +67,18 @@ public class PhoneCamera : MonoBehaviour
     {
         if (!camAvailable)
             return;
-
-        TextureRemapping();
-
-        //optional
-        //RedFilter();
-    }
-
-    void RedFilter()
-    {
-        backCamTexture.GetPixels32(textureBasePixels);
-        //webcam feed processing
-        for (int i = 0; i < textureNewPixels.Length; i++)
-        {
-            textureNewPixels[i].r = 255;//(byte)((int)textureBasePixels[i].r + 30);
-        }
-        Texture2D newTexture = new Texture2D(backCamTexture.width, backCamTexture.height);
-        newTexture.SetPixels32(textureNewPixels);
         
-        background.texture = newTexture;
+        //flag
+        if(true)
+        {
+            FilterMethod(outputTexture, backCamTexture);
+        }
+
+        PlaneRescaling();
+
     }
 
-    void TextureRemapping()
+    void PlaneRescaling()
     {
         ratio = (float)backCamTexture.width / (float)backCamTexture.height;
         //fit.aspectRatio = ratio;
@@ -101,8 +91,20 @@ public class PhoneCamera : MonoBehaviour
     }
 
     /// <summary>
-    /// newly added part
+    /// upstream-downstream pipeline method part
     /// </summary>
+
+    void FilterMethod(Texture2D tex1, WebCamTexture bufferWebCamTexture)
+    {
+        byte[] pngByteArray = ScreenshotWebcam(bufferWebCamTexture);
+
+        //send to and recieve from plugin
+        var plugin = new AndroidJavaClass("com.sky5698.unityplugin.PlugInClass");
+        pngByteArray = plugin.CallStatic<Byte[]>("ImageProcessingMethod", pngByteArray, bufferWebCamTexture.height, bufferWebCamTexture.width);
+
+        tex1.LoadImage(pngByteArray);
+        tex1.Apply();
+    }
 
     //frame texture (screenshot from camera)
     static byte[] ScreenshotWebcam(WebCamTexture wct) 

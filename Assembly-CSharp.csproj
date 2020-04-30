@@ -66,6 +66,7 @@
     <Compile Include="Assets\Scripts\PhoneCamera.cs" />
     <Compile Include="Assets\Scripts\PluginWrapper.cs" />
     <Compile Include="Assets\Scripts\RunTimeConsole.cs" />
+    <Compile Include="Assets\Scripts\SceneTransition.cs" />
     <Compile Include="Assets\Scripts\ScratchAR.cs" />
     <Compile Include="Assets\Scripts\TextureTest.cs" />
     <Reference Include="Unity.Timeline.Editor">
