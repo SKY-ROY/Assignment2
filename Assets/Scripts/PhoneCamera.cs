@@ -17,8 +17,8 @@ public class PhoneCamera : MonoBehaviour
     public string deviceHeight;
     public float ratio;
 
-    public RectTransform parentRect;
     public RawImage background;
+    bool expFlag = false;
 
     private void Start()
     {
@@ -38,7 +38,7 @@ public class PhoneCamera : MonoBehaviour
             {
                 backCamTexture = new WebCamTexture(devices[i].name, Screen.width, Screen.height);
                 //flag
-                if(true)
+                if(expFlag)
                     outputTexture = new Texture2D(backCamTexture.width, backCamTexture.height, TextureFormat.RGBA32, false);
             }
         }
@@ -51,7 +51,7 @@ public class PhoneCamera : MonoBehaviour
 
         backCamTexture.Play();
         //flag
-        if (true)
+        if (expFlag)
             background.texture = outputTexture;
         else
             background.texture = backCamTexture;
@@ -69,7 +69,7 @@ public class PhoneCamera : MonoBehaviour
             return;
         
         //flag
-        if(true)
+        if(expFlag)
         {
             FilterMethod(outputTexture, backCamTexture);
         }
