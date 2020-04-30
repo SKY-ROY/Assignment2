@@ -16,7 +16,7 @@ public class PluginWrapper : MonoBehaviour
     {
         Text textElement = GetComponent<Text>();
         var plugin = new AndroidJavaClass("com.sky5698.unityplugin.PlugInClass");
-        textElement.text = plugin.CallStatic<string>("GetTextFromPlugin", 100) + "\n" + plugin.CallStatic<string>("GetTextureDataFromPlugin", "Camera");
+        textElement.text = plugin.CallStatic<string>("GetTextFromPlugin", 100);
 
         //webcam initialization
         webcamTexture = new WebCamTexture();
