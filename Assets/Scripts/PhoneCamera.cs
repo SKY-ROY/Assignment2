@@ -17,6 +17,8 @@ public class PhoneCamera : MonoBehaviour
     public string deviceHeight;
     public float ratio;
 
+    //public AspectRatioFitter fit;
+    public RectTransform rectController;
     public RawImage background;
     bool expFlag = false;
 
@@ -83,8 +85,11 @@ public class PhoneCamera : MonoBehaviour
         ratio = (float)backCamTexture.width / (float)backCamTexture.height;
         //fit.aspectRatio = ratio;
 
+        rectController.SetSizeWithCurrentAnchors(RectTransform.Axis.Vertical, backCamTexture.height);
+        rectController.SetSizeWithCurrentAnchors(RectTransform.Axis.Horizontal, backCamTexture.width);
+
         //float scaleY = backCamTexture.videoVerticallyMirrored ? -1f : 1f;//not needed for android
-        background.rectTransform.localScale = new Vector3(1.777f * ((float)backCamTexture.width / 1920f), 0.563f/*scaleY*/, 1f);
+        //background.rectTransform.localScale = new Vector3(1.777f * ((float)backCamTexture.width / 1920f), 0.563f/*scaleY*/, 1f);
 
         int orientation = -backCamTexture.videoRotationAngle;
         background.rectTransform.localEulerAngles = new Vector3(0, 0, orientation);
