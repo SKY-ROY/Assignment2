@@ -8,23 +8,29 @@ using System.Runtime.InteropServices;
 public class PhoneCamera : MonoBehaviour
 {
     private bool camAvailable;
-    private WebCamTexture backCamTexture;
-    private Texture2D outputTexture;
+    private WebCamTexture backCamTexture_WC;
+    private Texture2D openCVTexture;
     private Texture defaultBackground;
+    private int renderedFrameCount = 0;
 
     public string deviceName;
     public string deviceWidth;
     public string deviceHeight;
+    public string camWidth;
+    public string camHeight;
     public float ratio;
+    public bool isFilterOn = false;
 
     //public AspectRatioFitter fit;
-    public RectTransform rectController;
-    public RawImage background;
-    bool expFlag = false;
+    public RectTransform rectController_UI;
+    public Image backgroundImage_UI;
+
+    [DllImport("CPPToUnity")]
+    private static extern int ProcessImage(ref Color32[] rawImage, int width, int height, int operationCount);
 
     private void Start()
     {
-        defaultBackground = background.texture;
+        defaultBackground = backgroundImage_UI.material.mainTexture;
         WebCamDevice[] devices = WebCamTexture.devices;
 
         if (devices.Length == 0)
@@ -38,30 +44,33 @@ public class PhoneCamera : MonoBehaviour
         {
             if(!devices[i].isFrontFacing)
             {
-                backCamTexture = new WebCamTexture(devices[i].name, Screen.width, Screen.height);
-                //flag
-                if(expFlag)
-                    outputTexture = new Texture2D(backCamTexture.width, backCamTexture.height, TextureFormat.RGBA32, false);
+                backCamTexture_WC = new WebCamTexture(devices[i].name, Screen.width, Screen.height);
             }
         }
 
-        if(backCamTexture == null)
+        if(backCamTexture_WC == null)
         {
             Debug.Log("Unable to find back camera");
             return;
         }
 
-        backCamTexture.Play();
-        //flag
-        if (expFlag)
-            background.texture = outputTexture;
+        backCamTexture_WC.Play();
+        openCVTexture = new Texture2D(backCamTexture_WC.width, backCamTexture_WC.height);
+        if(isFilterOn)
+        {
+            backgroundImage_UI.material.mainTexture = openCVTexture;//render this if openCV processing is required
+        }
         else
-            background.texture = backCamTexture;
+        {
+            backgroundImage_UI.material.mainTexture = backCamTexture_WC;//render this if no openCV procesing is required;
+        }
 
-        deviceName = backCamTexture.deviceName;
-        deviceWidth = backCamTexture.width.ToString();
-        deviceHeight = backCamTexture.height.ToString();
-
+        //debug info
+        deviceName = backCamTexture_WC.deviceName;
+        camWidth = backCamTexture_WC.width.ToString();
+        camHeight = backCamTexture_WC.height.ToString();
+        deviceWidth = Screen.currentResolution.width.ToString();
+        deviceHeight = Screen.currentResolution.height.ToString();
         camAvailable = true;
     }
 
@@ -69,81 +78,41 @@ public class PhoneCamera : MonoBehaviour
     {
         if (!camAvailable)
             return;
-        
-        //flag
-        if(expFlag)
-        {
-            FilterMethod(outputTexture, backCamTexture);
-        }
 
         PlaneRescaling();
-
     }
 
     void PlaneRescaling()
     {
-        ratio = (float)backCamTexture.width / (float)backCamTexture.height;
+        ratio = (float)backCamTexture_WC.width / (float)backCamTexture_WC.height;
         //fit.aspectRatio = ratio;
 
-        rectController.SetSizeWithCurrentAnchors(RectTransform.Axis.Vertical, backCamTexture.height);
-        rectController.SetSizeWithCurrentAnchors(RectTransform.Axis.Horizontal, backCamTexture.width);
+        if(isFilterOn)
+        {
+            //**************************OpenCV processing part****************************
+            //Obtain pixel-data from WebCamTexture and send it to openCV for processing
+            var rawImage = backCamTexture_WC.GetPixels32();
+            renderedFrameCount = ProcessImage(ref rawImage, backCamTexture_WC.width, backCamTexture_WC.height, renderedFrameCount);
+
+            //Apply the processed pixel-data as texture through gpu
+            openCVTexture.SetPixels32(rawImage);
+            openCVTexture.Apply();
+            //*************************Ends Here******************************************
+        }
+
+        //******************UI Element rescaling after rendering image part***********
+        //redrawing the UI_RawImage element to fit on screen
+        rectController_UI.SetSizeWithCurrentAnchors(RectTransform.Axis.Vertical, backCamTexture_WC.height);
+        rectController_UI.SetSizeWithCurrentAnchors(RectTransform.Axis.Horizontal, backCamTexture_WC.width);
 
         //float scaleY = backCamTexture.videoVerticallyMirrored ? -1f : 1f;//not needed for android
         //background.rectTransform.localScale = new Vector3(1.777f * ((float)backCamTexture.width / 1920f), 0.563f/*scaleY*/, 1f);
 
-        int orientation = -backCamTexture.videoRotationAngle;
-        background.rectTransform.localEulerAngles = new Vector3(0, 0, orientation);
-    }
+        //rotating the UI_RawImage to match the proportions
+        int orientation = -backCamTexture_WC.videoRotationAngle;
+        backgroundImage_UI.rectTransform.localEulerAngles = new Vector3(0, 0, orientation);
+        //*************************Ends Here******************************************
 
-    /// <summary>
-    /// upstream-downstream pipeline method part
-    /// </summary>
-
-    void FilterMethod(Texture2D tex1, WebCamTexture bufferWebCamTexture)
-    {
-        byte[] pngByteArray = ScreenshotWebcam(bufferWebCamTexture);
-
-        //send to and recieve from plugin
-        var plugin = new AndroidJavaClass("com.sky5698.unityplugin.PlugInClass");
-        pngByteArray = plugin.CallStatic<Byte[]>("ImageProcessingMethod", pngByteArray, bufferWebCamTexture.height, bufferWebCamTexture.width);
-
-        tex1.LoadImage(pngByteArray);
-        tex1.Apply();
-    }
-
-    //frame texture (screenshot from camera)
-    static byte[] ScreenshotWebcam(WebCamTexture wct) 
-    { 
-        Texture2D colorTex = new Texture2D(wct.width, wct.height, TextureFormat.RGBA32, false); 
-        colorTex.LoadRawTextureData(Color32ArrayToByteArray(wct.GetPixels32())); 
-        colorTex.Apply(); 
-        return colorTex.EncodeToPNG(); 
-    }
-
-    //Color32Array to ByteArray
-    private static byte[] Color32ArrayToByteArray(Color32[] colors)
-    {
-        if (colors == null || colors.Length == 0)
-            return null;
-
-        int lengthOfColor32 = Marshal.SizeOf(typeof(Color32));
-        int length = lengthOfColor32 * colors.Length;
-        byte[] bytes = new byte[length];
-
-        GCHandle handle = default(GCHandle);
-        try
-        {
-            handle = GCHandle.Alloc(colors, GCHandleType.Pinned);
-            IntPtr ptr = handle.AddrOfPinnedObject();
-            Marshal.Copy(ptr, bytes, 0, length);
-        }
-        finally
-        {
-            if (handle != default(GCHandle))
-                handle.Free();
-        }
-
-        return bytes;
     }
 }
 

@@ -9,15 +9,18 @@ EditorBuildSettings:
     path: Assets/Scenes/StartMenu.unity
     guid: 4946b8a3866f90d449d163e94244836a
   - enabled: 1
+    path: Assets/Scenes/PhoneCameraScene.unity
+    guid: 4d98435167b27da43a84d68e86d5fc60
+  - enabled: 1
     path: Assets/Scenes/ARDemoScene.unity
     guid: d87dd1c1e8fae6343bfd2b6c075e2e48
   - enabled: 1
-    path: Assets/Scenes/FilterDemoScene.unity
-    guid: 4d98435167b27da43a84d68e86d5fc60
-  - enabled: 1
-    path: Assets/Scenes/TextureTesting.unity
-    guid: 31c7cdba2c49fb8408b6d877679a0b6f
-  - enabled: 1
-    path: Assets/Scenes/IntegratedDemoScene.unity
+    path: Assets/Scenes/PostProcessingDemoScene.unity
     guid: db7885157005b6b4cb559a0aafaecda2
+  - enabled: 1
+    path: Assets/Scenes/OpenCVTestScene.unity
+    guid: 2e427d8b47bddf64ebfb4bbdb473eb20
+  - enabled: 1
+    path: Assets/Scenes/TextureTestScene.unity
+    guid: 31c7cdba2c49fb8408b6d877679a0b6f
   m_configObjects: {}

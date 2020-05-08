@@ -63,9 +63,11 @@
     </Reference>
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="Assets\Scripts\CallNativeCode.cs" />
     <Compile Include="Assets\Scripts\CanvasTest.cs" />
+    <Compile Include="Assets\Scripts\MainScript.cs" />
+    <Compile Include="Assets\Scripts\MessageReciever.cs" />
     <Compile Include="Assets\Scripts\PhoneCamera.cs" />
-    <Compile Include="Assets\Scripts\PluginWrapper.cs" />
     <Compile Include="Assets\Scripts\RunTimeConsole.cs" />
     <Compile Include="Assets\Scripts\SceneTransition.cs" />
     <Compile Include="Assets\Scripts\ScratchAR.cs" />

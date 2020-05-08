@@ -5,20 +5,19 @@ using UnityEngine.UI;
 
 public class RunTimeConsole : MonoBehaviour
 {
-    //public AspectRatioFitter fit;
     public PhoneCamera mainCam;
 
     private static string existingText;
 
-    private void Start()
-    {
-        
-    }
-
     // Update is called once per frame
     void Update()
     {
-        existingText = "R:" + mainCam.ratio + "\nN:" + mainCam.deviceName + "\nW:" + mainCam.deviceWidth + "\nH:" + mainCam.deviceHeight;
+        existingText = "R:" + mainCam.ratio 
+            + "\nDN:" + mainCam.deviceName 
+            + "\nDW:" + mainCam.deviceWidth 
+            + "\nDH:" + mainCam.deviceHeight
+            + "\nCW:" + mainCam.camWidth
+            + "\nCW:" + mainCam.camHeight;
         GetComponent<Text>().text = existingText;
     }
 }
