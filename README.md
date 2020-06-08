@@ -14,7 +14,14 @@ Create Camera app in unity for android which has following features:
 4. *Some AR effects with the help of virtual objects. This features can be added using only unity.*
 
 Note: Use of ARCore/ARFoundation is not allowed.
+#
 
-# APK LINK: https://github.com/SKY-ROY/Assignment2/raw/master/BUILD/Assignment2.3.apk
-# Android(C++) Plugin: https://github.com/SKY-ROY/CPPToUnity-Plugin
-# Android(Java) Plugin: https://github.com/SKY-ROY/JavaToUnity-Plugin
+# APK LINK: 
+https://github.com/SKY-ROY/Assignment2/raw/master/BUILD/Assignment2.3.apk
+#
+# Android(C++) Plugin: 
+https://github.com/SKY-ROY/CPPToUnity-Plugin
+#
+# Android(Java) Plugin: 
+https://github.com/SKY-ROY/JavaToUnity-Plugin
+#
